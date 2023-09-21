@@ -4,6 +4,8 @@ It only works for trig function and function with e, not for other special math 
 It can not deal with chain rule but not product rule or quotient rule
 It only works for one single term, means no such thing like x+2x
 
+
+
 """""
 
 import math
