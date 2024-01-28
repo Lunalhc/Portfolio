@@ -84,10 +84,16 @@ def decryption(n,a_inverse,ciphertext_number):
 if __name__ == "__main__":
 
     choice = input("type 1 for encryption, 2 for decrption\n")  
+    default_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
     if choice == "1":
 
-        Alphabet = input("please type the alphabet you are using in uppercase\n")  # enter the alphabet we want to use
+        alphabet_choice = input("please type the alphabet you are using in uppercase\n type 1 if you want to use default alphabet\n")  # enter the alphabet we want to use
+        if alphabet_choice == "1":  
+            Alphabet = default_alphabet  # use default english alphabet
+        else:
+            Alphabet = alphabet_choice
+
 
         Shift = int(input("what shift number do you want to use?\n")) # enter how many shifts you want 
         N,_= setup(Alphabet,Shift)    # calculate the size of the alphabet
@@ -122,10 +128,15 @@ if __name__ == "__main__":
         Ciphertext = ''.join(Ciphertext_list)   # combine all the letters in the list to get a string
         print(f"The Ciphertext is : {Ciphertext}")
     
+
+
     elif choice == "2":
 
-        Alphabet = input("please type the alphabet you are using in uppercase\n")  # enter the alphabet we want to use
-        # default Alphabet for copying ABCDEFGHIJKLMNOPQRSTUVWXYZ
+        alphabet_choice = input("please type the alphabet you are using in uppercase\n type 1 if you want to use default alphabet\n")  # enter the alphabet we want to use
+        if alphabet_choice == "1":  
+            Alphabet = default_alphabet  # use default english alphabet
+        else:
+            Alphabet = alphabet_choice
 
         Shift = int(input("what shift number do you want to use?\n"))  # enter how many shifts you want 
         N,_= setup(Alphabet,Shift)    # calculate the size of the alphabet
