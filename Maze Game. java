@@ -1,0 +1,377 @@
+# Overview
+
+{This is a simple maze game coded in Java, where the user can use the keyboard (arrows) to give the instruction to move}
+
+{I chose to write a maze game because I want to do something involved animation that is suitable for Java, and my friend suggests that a simple game would be great. Then I remember what i have been learning in CSE212 about data structure, so I think it's perfect to utilize different kinds of data type such as stacks. And one of the task in that class actually gave me the idea of how to update the position nd how to move. I watched the entire playlist of basic Java tutorial on YouTube. }
+
+
+
+[Software Demo Video](https://youtu.be/76xl7NmaO8w)
+
+# Development Environment
+
+{I used vs studio code to write it. And I also got some help from my friends. I googled some information to learn how to set up Java in vs studio code and what packages/library i need to import for animation}
+
+{This project is in Java, and classes are all from Java Standard Library}
+
+# Useful Websites
+
+everything about setting up Java in vscode: https://code.visualstudio.com/docs/languages/java 
+
+The Youtube Playlist I watched to learn Java: https://youtube.com/playlist?list=PLLAZ4kZ9dFpPpdR_9IQBUDLjYalvdrGGb&si=R1dCaHXNVC-pqi2_ 
+
+# Future Work
+
+- make the maze more complicated, like adding traps and treasure on random position
+- make the interface nicer
+- write the history score to a file so that it can keep the user history
+
+
+  //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  import java.awt.Color;
+import java.awt.Graphics;
+
+public class Player {
+    private int x;
+    private int y;
+
+    // constructor
+    public Player(int startX, int startY) {
+        this.x = startX;
+        this.y = startY;
+    }
+    // getters and setters
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    // update the position of player
+    public void move(int dx, int dy) {
+        x += dx;
+        y += dy;
+    }
+
+    // check if the player wins
+    public boolean hasReachedEnd(Maze maze) {
+        return maze.isEndPoint(x, y);
+    }
+
+    // a method to draw the player on the screen
+    public void draw(Graphics g) {
+        g.setColor(Color.RED);
+        g.fillOval(x * 20, y * 20, 20, 20);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+public class MazeGame {
+    public static void main(String[] args) {
+        // maze size
+        int width = 21; 
+        int height = 21; 
+
+        Maze maze = new Maze(width, height);  // create maze object
+        Player player = new Player(maze.getStartX(), maze.getStartY());  // create player object
+        GamePanel gamePanel = new GamePanel(maze, player);  // create gamepanel object
+
+        JFrame frame = new JFrame("Maze Game");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(maze.getWidth() * 20 + 16, maze.getHeight() * 20 + 39);  // size of the window
+        frame.add(gamePanel);
+        frame.setVisible(true);  // make the frame visible
+
+        frame.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int keyCode = e.getKeyCode();
+                int newX = player.getX();
+                int newY = player.getY();
+
+                // handle the movement
+                switch (keyCode) {
+                    case KeyEvent.VK_UP:
+                        newY -= 1;
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        newY += 1;
+                        break;
+                    case KeyEvent.VK_LEFT:
+                        newX -= 1;
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        newX += 1;
+                        break;
+                }
+
+                // check if the new position is a wall
+                if (maze.isWalkable(newX, newY)) {
+                    player.move(newX - player.getX(), newY - player.getY());
+                    gamePanel.repaint();
+
+                    // if the player  is on the end position
+                    if (player.hasReachedEnd(maze)) {
+                        JOptionPane.showMessageDialog(frame, "Congratulations! You've reached the end!");
+                        frame.dispose(); // Close the game window
+                    }
+                }
+            }
+        });
+    }
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// import the classes we need for the visulization
+import java.awt.Color;
+import java.awt.Graphics;
+import java.util.Random;
+import java.util.Stack;
+
+public class Maze {
+    
+    private int[][] maze;  //array for the grid
+    private int startX, startY;   // strating point
+    private int endX, endY;     // ending point
+    // size of the maze
+    private final int width;   
+    private final int height;
+
+    private final Random random;  // create an instance object to generate random numbers
+
+    // constructor
+    public Maze(int width, int height) {
+        this.width = width;
+        this.height = height;
+        this.random = new Random();
+        this.maze = new int[height][width];
+        generateMaze();  // call the method to generate the maze
+        // set starting point and ending point
+        startX = 1;
+        startY = 1;
+        endX = width - 2;
+        endY = height - 2;
+    }
+    
+    // a method to generate the maze 
+    private void generateMaze() {
+        
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                maze[y][x] = 1;
+            }
+        }
+
+        Stack<int[]> stack = new Stack<>();  // create a stack to keep track of the cells
+        int[] start = {1, 1};   // starting cell
+        maze[1][1] = 0;
+        stack.push(start);  // Push the starting cell onto the stack.
+
+        while (!stack.isEmpty()) {
+            int[] current = stack.pop();
+            // get current cell position
+            int cx = current[0];
+            int cy = current[1];
+
+            // neighbor cells
+            int[][] neighbors = {
+                {cx + 2, cy},
+                {cx - 2, cy},
+                {cx, cy + 2},
+                {cx, cy - 2}
+            };
+
+            shuffleArray(neighbors);  // call shuffle method to make random path
+
+            for (int[] neighbor : neighbors) {
+                int nx = neighbor[0];
+                int ny = neighbor[1];
+                
+                // check if it's a wall
+                if (nx > 0 && ny > 0 && nx < width - 1 && ny < height - 1 && maze[ny][nx] == 1) {
+                    int mx = (cx + nx) / 2;
+                    int my = (cy + ny) / 2;
+
+                    maze[ny][nx] = 0;
+                    maze[my][mx] = 0;
+                    maze[cy][cx] = 0;
+
+                    stack.push(new int[]{nx, ny});  //Push the neighboring cell onto the stack
+                }
+            }
+        }
+    }
+    // a method to shuffle the array using a algorithm
+    private void shuffleArray(int[][] array) {
+        for (int i = array.length - 1; i > 0; i--) {
+            int index = random.nextInt(i + 1);
+            int[] temp = array[index];
+            array[index] = array[i];
+            array[i] = temp;
+        }
+    }
+
+    // check if it's walkable
+    public boolean isWalkable(int x, int y) {
+        if (x < 0 || x >= width || y < 0 || y >= height) {
+            return false;
+        }
+        return maze[y][x] == 0;
+    }
+    
+    // getters
+    public int getStartX() {
+        return startX;
+    }
+
+    public int getStartY() {
+        return startY;
+    }
+
+    public int getEndX() {
+        return endX;
+    }
+
+    public int getEndY() {
+        return endY;
+    }
+
+    public boolean isEndPoint(int x, int y) {
+        return x == endX && y == endY;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    // a method to draw the maze on the creen
+    public void draw(Graphics g) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (maze[y][x] == 1) {
+                    g.setColor(Color.BLACK);  //draws a black square for wall
+                    g.fillRect(x * 20, y * 20, 20, 20);
+                } else {
+                    g.setColor(Color.WHITE); // draw a white square for open path
+                    g.fillRect(x * 20, y * 20, 20, 20);
+                }
+            }
+        }
+
+        // make the starting point
+        g.setColor(Color.GREEN);  
+        g.fillRect(startX * 20, startY * 20, 20, 20);
+
+        // make the ending point blue
+        g.setColor(Color.BLUE);
+        g.fillRect(endX * 20, endY * 20, 20, 20);
+    }
+}
+
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// import from  the package
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+// implement the interface
+public class InputHandler implements KeyListener {
+
+    // hold references
+    private Maze maze;
+    private Player player;
+    private GamePanel gamePanel;
+    //constructor
+    public InputHandler(Maze maze, Player player, GamePanel gamePanel) {
+        this.maze = maze;
+        this.player = player;
+        this.gamePanel = gamePanel;
+    }
+    
+    @Override  // inherits all attributes and override the method
+    // method for pressing the key
+    public void keyPressed(KeyEvent e) {
+        int keyCode = e.getKeyCode();  // get the code of the key being pressed
+        // initialize the position
+        int newX = player.getX();  
+        int newY = player.getY();
+
+        // change the coordinates based on the key the user pressed
+        switch (keyCode) {
+            case KeyEvent.VK_UP:
+                newY -= 1;
+                break;
+            case KeyEvent.VK_DOWN:
+                newY += 1;
+                break;
+            case KeyEvent.VK_LEFT:
+                newX -= 1;
+                break;
+            case KeyEvent.VK_RIGHT:
+                newX += 1;
+                break;
+        }
+
+        // check if the new position is a wall
+        if (maze.isWalkable(newX, newY)) {
+            player.move(newX - player.getX(), newY - player.getY());
+            gamePanel.repaint();
+        }
+    }
+
+    // these 2 methods are not used, but have to be there because we implements the KeyListener
+    @Override
+    public void keyReleased(KeyEvent e) {
+        
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        
+    }
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import javax.swing.JPanel;
+import java.awt.Graphics;
+
+// inherit JPanel class and extend it
+public class GamePanel extends JPanel {
+    private Maze maze;   // hold reference to Maze class
+    private Player player;   // hold reference to Player class
+
+    // constructor
+    public GamePanel(Maze maze, Player player) {
+        this.maze = maze;
+        this.player = player;
+    }
+
+    @Override  // overriding from superclass
+    // the method from JPanel that is overidden
+    protected void paintComponent(Graphics g) {
+
+        super.paintComponent(g);   // call the method
+        maze.draw(g);   // call the draw method in maze class
+        player.draw(g);  // call the draw method in player class
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
